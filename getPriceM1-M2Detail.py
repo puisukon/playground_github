@@ -7,7 +7,7 @@ from bs4 import BeautifulSoup
 ############# buy when + 3 day , sell when - 3 days ####################
 ############# Method 1 ####################
 
-stockList = ['SCCC']
+stockList = ['JAS']
 url = 'http://www.set.or.th/set/historicaltrading.do?symbol={0}&page={1}&language=th&country=TH&type=trading'
 priceDate = []
 priceList = {}
@@ -15,10 +15,12 @@ def getPrice(stock,pageNo):
     htmlFile = urllib.urlopen(url.format(stock,pageNo)).read()
     soup = BeautifulSoup(htmlFile,'html.parser')
     table = soup.find(attrs={'class':'table table-hover table-info'})
-    for each in table.find_all('tr'):
+    if table:
+        for each in table.find_all('tr'):
             if len(each.findAll('td')) > 4 :
-                    td = each.findAll('td')
-                    dateStr = td[0].text.split('/')[2]+td[0].text.split('/')[1]+td[0].text.split('/')[0]
+                td = each.findAll('td')
+                dateStr = td[0].text.split('/')[2]+td[0].text.split('/')[1]+td[0].text.split('/')[0]
+                if td[4].text.count("-") == 0 :
                     priceList[dateStr] = float(td[4].text)
                     priceDate.append(dateStr)
 
@@ -27,9 +29,9 @@ def method1(priceList):
 
 for eachStock in stockList:
     print eachStock
-    getPrice(each,0)
-    getPrice(each,1)
-    getPrice(each,2)
+    getPrice(eachStock,0)
+    getPrice(eachStock,1)
+    getPrice(eachStock,2)
 
 
 yesterdayPrice = priceList[priceDate[len(priceDate) - 1]]
