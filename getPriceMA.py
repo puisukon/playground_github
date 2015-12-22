@@ -3,10 +3,189 @@ import urllib
 from bs4 import BeautifulSoup
 
 #   Intend to calculate MA ( Moving Average ) of the stock
-stockList = ['JAS']
+stockList = [
+    'ADVANC',
+'INTUCH',
+'JAS',
+'DTAC',
+'CPALL',
+'KBANK',
+'BDMS',
+'AOT',
+'CSS',
+'PTT',
+'SCB',
+'KTB',
+'TKN',
+'TCAP',
+'BBL',
+'SCC',
+'EPG',
+'IFEC',
+'BH',
+'PTTEP',
+'TOP',
+'MINT',
+'CPN',
+'ITD',
+'PTTGC',
+'MTLS',
+'TU',
+'TMB',
+'MAX',
+'TASCO',
+'IRPC',
+'K',
+'VIBHA',
+'CPF',
+'TIPCO',
+'SAWAD',
+'CK',
+'THCOM',
+'LH',
+'BA',
+'SCI',
+'ASEFA',
+'BANPU',
+'SUPER',
+'BTS',
+'INET',
+'AMATAV',
+'GLOW',
+'COM7',
+'JTS',
+'MAJOR',
+'GUNKUL',
+'HMPRO',
+'TPIPL',
+'SAMART',
+'TWPC',
+'BCP',
+'STEC',
+'STPI',
+'LPH',
+'S',
+'WHA',
+'SCCC',
+'SIRI',
+'DELTA',
+'TTW',
+'MFEC',
+'SPALI',
+'QH',
+'ROBINS',
+'AAV',
+'CENTEL',
+'EGCO',
+'IVL',
+'AJD',
+'BEAUTY',
+'GPSC',
+'SPRC',
+'TTCL',
+'RATCH',
+'BCH',
+'EARTH',
+'HFT',
+'PT',
+'CPR',
+'NUSA',
+'PLANB',
+'BEC',
+'TACC',
+'EA',
+'J',
+'HANA',
+'PIMO',
+'KTC',
+'KCE',
+'UNIQ',
+'AUCT',
+'BLAND',
+'RP',
+'M',
+'PTG',
+'SF',
+'ICHI',
+'TTA',
+'CHG',
+'BLA',
+'THANI',
+'SGP',
+'DEMCO',
+'SAPPE',
+'PRAKIT',
+'KKP',
+'SVI',
+'BIGC',
+'LPN',
+'PS',
+'TNH',
+'BAFS',
+'ASIMAR',
+'VNG',
+'EFORL',
+'TSE',
+'VIH',
+'TVO',
+'MCS',
+'AP',
+'BJCHI',
+'NYT',
+'SCN',
+'TRC',
+'GEL',
+'ECF',
+'VGI',
+'AIT',
+'TISCO',
+'SR',
+'MONO',
+'TAPAC',
+'BR',
+'WICE',
+'UWC',
+'EMC',
+'THREL',
+'LIT',
+'CKP',
+'TICON',
+'TFG',
+'SPCG',
+'WIIK',
+'ERW',
+'ASK',
+'SOLAR',
+'THAI',
+'FPI',
+'STA',
+'PCA',
+'GL',
+'TVT',
+'IEC',
+'BWG',
+'TAKUNI',
+'T',
+'SENA',
+'BTC',
+'LHBANK',
+'PDI',
+'MALEE',
+'JWD',
+'IRCP',
+'DCC',
+'DCORP',
+'ASP',
+'CBG',
+'MEGA',
+'TIP',
+'ILINK',
+'SYNTEC']
 url = 'http://www.set.or.th/set/historicaltrading.do?symbol={0}&page={1}&language=th&country=TH&type=trading'
 priceDate = []
 priceList = {}
+MA3List = {}
+MA7List = {}
 def getPrice(stock,pageNo):
     htmlFile = urllib.urlopen(url.format(stock,pageNo)).read()
     soup = BeautifulSoup(htmlFile,'html.parser')
@@ -20,69 +199,73 @@ def getPrice(stock,pageNo):
                     priceList[dateStr] = float(td[4].text)
                     priceDate.append(dateStr)
 
+def findMA3():
+    lastN = []
+    for each in range(len(priceDate)-1,-1,-1):
+        date = priceDate[each]
+        price = float(priceList[priceDate[each]])
+        if len(lastN) == 3 :
+            lastN.pop(0)
+        lastN.append(price)
+        MA3List[date] = round(sum(lastN)/len(lastN),3)
+
+def findMA7():
+    lastN = []
+    for each in range(len(priceDate)-1,-1,-1):
+        date = priceDate[each]
+        price = float(priceList[priceDate[each]])
+        if len(lastN) == 7 :
+            lastN.pop(0)
+        lastN.append(price)
+        MA7List[date] = round(sum(lastN)/len(lastN),3)
+
+
 for eachStock in stockList:
     print eachStock
+    priceDate = []
+    priceList = {}
+    MA3List = {}
+    MA7List = {}
     getPrice(eachStock,0)
     getPrice(eachStock,1)
     getPrice(eachStock,2)
 
+    findMA3()
+    findMA7()
 
-yesterdayPrice = priceList[priceDate[len(priceDate) - 1]]
-countDayPlus = 0
-countDayMinus = 0
-onHand1 = 0
-onHand2 = 0
-gain1 = 0
-gain2 = 0
-totalGain1 = 0
-totalGain2 = 0
-for each in range(len(priceDate)-1,-1,-1):
-    date = priceDate[each]
-    price = priceList[date]
-    priceChange = priceList[priceDate[each]] - yesterdayPrice
-    if priceChange > 0 :
-        countDayPlus += 1
-        if countDayPlus == 3 :
-            if onHand1 == 0:
-                onHand1 = price
-                print date,price,"+++++" ,priceChange ," : ",countDayPlus   ," <<<<<<<<M1<<<<<<<<< BUY  " , price
+    onHand = 0
+    gain = 0
+    totalGain = 0
+    for each in range(len(priceDate)-1,-1,-1):
+        if each < len(priceDate) - 10 :
+            date = priceDate[each]
+            price = float(priceList[date])
+            prePrice = float(priceList[priceDate[each + 1]])
+            preprePrice = float(priceList[priceDate[each + 2]])
+            preDate = priceDate[each + 1]
+            if MA3List[date] > MA7List[date] and MA3List[preDate] < MA7List[preDate]:
+                if onHand == 0:
+                    onHand = prePrice
+                    print date,price,MA3List[date],MA7List[date] , " +++++ UP , Buy ",prePrice
+                else:
+                    print date,price,MA3List[date],MA7List[date] , " +++++ UP"
+            elif MA3List[date] < MA7List[date] and MA3List[preDate] > MA7List[preDate]:
+                if onHand <> 0 :
+                    gain = prePrice - onHand
+                    totalGain += gain
+                    onHand = 0
+                    print date,price,MA3List[date],MA7List[date] , " ----- Down, SELL", prePrice,gain,totalGain
+                else:
+                    print date,price,MA3List[date],MA7List[date] , " ----- Down"
+            elif onHand <> 0 and (prePrice - onHand) / prePrice * 100 < -1.0 :
+                gain = prePrice - onHand
+                totalGain += gain
+                onHand = 0
+                print "Cut Loss ",prePrice,gain, totalGain, (prePrice - preprePrice) / prePrice * 100
             else:
-                print date,price,"+++++" ,priceChange ," : ",countDayPlus   ," <<<M1 BUY" , price
+                pass
+##                print date,price,MA3List[date],MA7List[date]
+    print eachStock,price,round(float(totalGain)/price* 100.0,2)," %"
+    print " ####################################################################"
+    
 
-            if onHand2 <> 0:
-                gain2 = price - onHand2
-                totalGain2 += gain2
-                onHand2 = 0
-                print date,price,"+++++" ,priceChange ," : " , countDayMinus," <<<<<<<M2<<<<<<<<<< SELL" , price , gain2 , totalGain2
-            else:
-                print date,price,"+++++" ,priceChange ," : " , countDayMinus," <<<M2 SELL" , price
-                
-        else:
-            print date,price,"+++++" ,priceChange ," : ",countDayPlus
-        countDayMinus = 0
-    elif priceChange < 0:
-        countDayMinus += 1
-        if countDayMinus == 3:
-            if onHand1 <> 0:
-                gain1 = price - onHand1
-                totalGain1 += gain1
-                onHand1 = 0
-                print date,price,"-----" ,priceChange ," : " , countDayMinus," <<<<<<<M1<<<<<<<<<< SELL" , price , gain1 , totalGain1
-            else:
-                print date,price,"-----" ,priceChange ," : " , countDayMinus," <<<M1 SELL" , price
-
-            if onHand2 == 0:
-                onHand2 = price
-                print date,price,"-----" ,priceChange ," : ",countDayPlus   ," <<<<<<<<M2<<<<<<<<< BUY  " , price
-            else:
-                print date,price,"-----" ,priceChange ," : ",countDayPlus   ," <<<M2 BUY" , price
-
-        else:
-            print date,price,"-----" ,priceChange ," : " , countDayMinus
-        countDayPlus = 0
-    else :
-        print priceDate[each],priceList[priceDate[each]],"====="
-    yesterdayPrice = priceList[priceDate[each]]
-
-
-print "{0} : M1 = {1} %, M2 = {2} %".format(eachStock,round(totalGain1/price*100,2),round(totalGain2/price*100,2))
